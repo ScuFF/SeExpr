@@ -17,6 +17,12 @@
 # Set application root dir for use inside the source code.
 add_definitions(-DIMAGE_EDITOR_ROOT="${CMAKE_INSTALL_PREFIX}")
 
+set(imageEditor_EXAMPLES fbm.se noisecolor1.se noisecolor2.se noise.se raytrace.se sinc.se)
+set(imageEditor_EXAMPLE_FILES)
+foreach(example IN LISTS imageEditor_EXAMPLES)
+    list(APPEND imageEditor_EXAMPLE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/${example}")
+endforeach()
+
 if (ENABLE_QT5)
     find_package(Qt5 COMPONENTS Core Gui Widgets) # find and setup Qt5 for this project
     include_directories(${Qt5Core_INCLUDE_DIRS}
@@ -45,6 +51,15 @@ else()
 endif()
 
     add_executable(imageEditor2 ${imageEditor_CPPS} ${imageEditor_MOC_SRCS})
+    # Keep runtime data beside the executable, including multi-config builds.
+    # Example edits trigger relinking and refresh the staged copies.
+    set_property(TARGET imageEditor2 APPEND PROPERTY LINK_DEPENDS ${imageEditor_EXAMPLE_FILES})
+    add_custom_command(TARGET imageEditor2 POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:imageEditor2>/examples"
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                ${imageEditor_EXAMPLE_FILES} "$<TARGET_FILE_DIR:imageEditor2>/examples"
+        COMMENT "Copying image editor examples beside the executable"
+        VERBATIM)
 
 if (ENABLE_QT5)
     target_link_libraries(imageEditor2 Qt5::Core)
@@ -64,5 +79,5 @@ endif()
 endif()
 endif()
 
-install(FILES fbm.se noisecolor1.se noisecolor2.se noise.se raytrace.se sinc.se
+install(FILES ${imageEditor_EXAMPLES}
         DESTINATION share/SeExpr2/expressions)

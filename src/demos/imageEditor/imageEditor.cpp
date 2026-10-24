@@ -24,6 +24,7 @@
 #include <png.h>
 
 #include <QApplication>
+#include <QDir>
 #include <QDialog>
 #include <QVBoxLayout>
 #include <QScrollArea>
@@ -164,6 +165,10 @@ ImageEditorDialog::ImageEditorDialog(QWidget *parent) : QDialog(parent) {
 
     // Add user expressions, example expressions to browser list.
     browser->addUserExpressionPath("imageEditor");
+    const QString localExamples = QCoreApplication::applicationDirPath() + "/examples";
+    if (QDir(localExamples).exists()) {
+        browser->addPath("Examples", localExamples.toStdString());
+    } else {
 #ifdef IMAGE_EDITOR_ROOT
     std::string exPathStr = IMAGE_EDITOR_ROOT;
     exPathStr += "/share/SeExpr2/expressions";
@@ -171,6 +176,7 @@ ImageEditorDialog::ImageEditorDialog(QWidget *parent) : QDialog(parent) {
 #else
     browser->addPath("Examples", "./src/demos/imageEditor");
 #endif
+    }
     browser->update();
 
     // Create apply button and connect to image preview.

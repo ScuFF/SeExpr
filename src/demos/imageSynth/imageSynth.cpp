@@ -99,7 +99,8 @@ int main(int argc, char* argv[]) {
         std::cerr << expr.parseError() << std::endl;
         return 1;
     }
-    if (!expr.returnType().isFP(3)) {
+    // Scalar results are promoted to RGB by the expression evaluator.
+    if (!expr.returnType().isFP(1) && !expr.returnType().isFP(3)) {
         std::cerr << "Expected color FP[3] got type " << expr.returnType().toString() << std::endl;
         return 1;
     }
