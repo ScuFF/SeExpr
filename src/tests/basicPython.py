@@ -2,13 +2,19 @@
 from __future__ import absolute_import, division, unicode_literals
 import sys
 import unittest
+import argparse
+import os
 
-try:
-    import SeExprPy
-except ImportError:
-    sys.stderr.write(
-        'WARNING: SeExprPy is not importable: Python support is disabled\n')
-    sys.exit(0)
+parser = argparse.ArgumentParser()
+parser.add_argument('--package-dir')
+parser.add_argument('--dll-dir')
+options, test_args = parser.parse_known_args()
+if options.package_dir:
+    sys.path.insert(0, options.package_dir)
+if os.name == 'nt' and options.dll_dir:
+    dll_directory = os.add_dll_directory(options.dll_dir)
+
+import SeExprPy
 
 
 MAP_EXPR = """
@@ -59,4 +65,4 @@ class SeExprTestCase(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(argv=[sys.argv[0]] + test_args)

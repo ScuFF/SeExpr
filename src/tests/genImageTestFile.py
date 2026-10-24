@@ -50,7 +50,7 @@ f.write("void evalExpressionFile(const char *filepath);\n")
 seen = set()
 for dir_name, sub_dirs, se_files in os.walk(rootdir):
     for se_file in se_files:
-        fullpath = os.path.join(dir_name, se_file)
+        fullpath = os.path.join(dir_name, se_file).replace('\\', '/')
         # use parent_dir and gparent_dir for test name to avoid duplicates
         (head, parent_dir) = os.path.split(dir_name)
         (head, gparent_dir) = os.path.split(head)

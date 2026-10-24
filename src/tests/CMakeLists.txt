@@ -18,9 +18,11 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/../SeExpr2)
 set(TEST_DEST "share/test/SeExpr2")
 
 if (GTEST_DIR)
-    # Google test framework
-    include_directories(AFTER ${GTEST_DIR}/include)
-    find_library(GTEST_LIBRARIES gtest PATHS ${GTEST_DIR}/${CMAKE_INSTALL_LIBDIR})
+    # Keep the legacy prefix hint, but consume configuration-aware targets.
+    list(PREPEND CMAKE_PREFIX_PATH "${GTEST_DIR}")
+endif()
+find_package(GTest CONFIG QUIET)
+if (GTest_FOUND)
 
     # Uncomment below to print performance stats
     # add_definitions(-DSEEXPR_PERFORMANCE)
@@ -46,9 +48,7 @@ if (GTEST_DIR)
         if (EXISTS ${EXAMPLE_DIR})
             set (EXAMPLE_TESTS "testSeExprExamples.cpp")
             add_custom_command(
-                SOURCE ${EXAMPLE_DIR}
-                COMMAND ${GENERATE_SCRIPT}
-                ARGS "${EXAMPLE_DIR}" "${EXAMPLE_TESTS}"
+                COMMAND "${PYTHON_EXECUTABLE}" "${GENERATE_SCRIPT}" "${EXAMPLE_DIR}" "${EXAMPLE_TESTS}"
                 OUTPUT ${EXAMPLE_TESTS}
                 DEPENDS ${GENERATE_SCRIPT} ${EXAMPLE_DIR})
         endif()
@@ -58,9 +58,7 @@ if (GTEST_DIR)
         if (EXISTS ${PAINT3D_DIR})
             set (PAINT3D_TESTS "testPaint3dExamples.cpp")
             add_custom_command(
-                SOURCE ${PAINT3D_DIR}
-                COMMAND ${GENERATE_SCRIPT}
-                ARGS "${PAINT3D_DIR}" "${PAINT3D_TESTS}"
+                COMMAND "${PYTHON_EXECUTABLE}" "${GENERATE_SCRIPT}" "${PAINT3D_DIR}" "${PAINT3D_TESTS}"
                 OUTPUT ${PAINT3D_TESTS}
                 DEPENDS ${GENERATE_SCRIPT} ${PAINT3D_DIR})
         endif()
@@ -69,10 +67,12 @@ if (GTEST_DIR)
             "testmain.cpp" "imageTests.cpp"
             ${EXAMPLE_TESTS} ${PAINT3D_TESTS}
             "basic.cpp" "string.cpp")
-        target_link_libraries(testmain2 SeExpr2 ${GTEST_LIBRARIES} ${PNG_LIBRARIES})
+        target_compile_features(testmain2 PRIVATE cxx_std_17)
+        target_link_libraries(testmain2 SeExpr2 GTest::gtest ${PNG_LIBRARIES})
         install(TARGETS testmain2 DESTINATION ${TEST_DEST})
         install(PROGRAMS imagediff.py DESTINATION ${TEST_DEST})
         add_test(NAME basic COMMAND testmain2 --gtest_filter=BasicTests.*)
+        add_test(NAME strings COMMAND testmain2 --gtest_filter=StringTests.*)
     else()
         message(STATUS "Couldn't find PNG -- not doing tests")
     endif()
@@ -82,9 +82,13 @@ endif()
 
 add_test(NAME imageTestsReport
          COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/imageTestsReportNew.py runall)
+set_tests_properties(imageTestsReport PROPERTIES SKIP_RETURN_CODE 77)
 
-add_test(NAME basicPython
-         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/basicPython.py)
+if (TARGET core)
+    add_test(NAME basicPython
+        COMMAND "${PYTHON_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/basicPython.py"
+                --package-dir "$<TARGET_FILE_DIR:core>/.." --dll-dir "${BOOST_LIB_DIR}")
+endif()
 
 add_executable(dirtSimple "dirtSimple.cpp")
 target_link_libraries(dirtSimple SeExpr2 ${PNG_LIBRARIES})

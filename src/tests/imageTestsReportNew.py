@@ -23,7 +23,7 @@ seexpr1=os.environ.get("RP_SeExpr")
 seexpr2=os.environ.get("RP_seexpr2")
 if not seexpr1 or not seexpr2:
     print('%s: test versions not present, skipping tests' % sys.argv[0])
-    sys.exit(0)
+    sys.exit(77)
 
 versionKeys="v1","v2-interp","v2-llvm"
 versions={"v2-llvm": "SE_EXPR_EVAL=LLVM "+os.path.join(seexpr2,"share","test","SeExpr2","testmain2"),
@@ -56,7 +56,7 @@ def run(filterString):
             fpLog.write(line)
             line=line.strip()
             if re.search('OK', line):
-                (prefix, time) = re.split('\(', line)
+                (prefix, time) = re.split(r'\(', line)
                 count+=1
                 if count%10==0: 
                     percent=100*count/testCount

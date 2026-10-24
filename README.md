@@ -15,6 +15,17 @@
 Requires CMake 3.16 or later. Python discovery uses CMake's `FindPython`;
 existing `PYTHON_EXECUTABLE`, `PYTHON_INCLUDE_DIR`, `PYTHON_LIBRARY`, and
 `PYTHON_DEBUG_LIBRARY` overrides are forwarded for compatibility.
+For regression tests, install GoogleTest's CMake package and make it discoverable
+through `CMAKE_PREFIX_PATH` or `GTest_DIR`. Tests link `GTest::gtest`, preserving
+Debug/Release library selection; the current test target uses C++17.
+
+Build all targets before running CTest. The core Python binding is staged as
+an importable `SeExprPy` package inside the build tree (including `.pyd` on
+Windows), so `basicPython` does not require installation. Missing imports
+fail the test. `BlockTests` always checks interpreter results and compares
+LLVM results only when that backend was compiled. The legacy image comparison
+report is explicitly skipped when its separate comparison installations are
+unavailable. CTest dashboard configuration is generated via `include(CTest)`.
 
 ```bash
 $ git clone https://github.com/wdas/SeExpr

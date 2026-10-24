@@ -1,6 +1,8 @@
 
 #include <SeExpr2/Expression.h>
 #include <SeExpr2/VarBlock.h>
+#include <ExprConfig.h>
+#include <algorithm>
 
 using namespace SeExpr2;
 
@@ -66,24 +68,34 @@ int main() {
         }
     };
     // buildAndRun("a=printf(\"Test %v\",i);[i,i*2,i*4]",TypeVec(3),offA);
-    buildAndRun(Expression::UseLLVM, "i", TypeVec(3), offA);         // run A expr
-    buildAndRun(Expression::UseLLVM, "i", TypeVec(1), offB);         // run B expr
-    buildAndRun(Expression::UseLLVM, "A+B+i2*i", TypeVec(3), offC);  // run C expr
+    buildAndRun(Expression::UseInterpreter, "i", TypeVec(3), offA);
+    buildAndRun(Expression::UseInterpreter, "i", TypeVec(1), offB);
+    buildAndRun(Expression::UseInterpreter, "A+B+i2*i", TypeVec(3), offC);
+    bool good = true;
+    for (size_t index = 0; index < I.size(); ++index) {
+        good &= A[index] == I[index];
+        good &= C[index] == I[index] + I[(index / 3) * 3] + I2[index] * I[index];
+    }
+    for (size_t index = 0; index < B.size(); ++index)
+        good &= B[index] == I[index * 3];
+#ifdef SEEXPR_ENABLE_LLVM
     std::vector<double> Abak = A;
     std::vector<double> Bbak = B;
     std::vector<double> Cbak = C;
-    // reevaluate with interpreter
-    A.resize(A.size(), 0);
-    B.resize(B.size(), 0);
-    C.resize(C.size(), 0);
-    buildAndRun(Expression::UseInterpreter, "i", TypeVec(3), offA);         // run A expr
-    buildAndRun(Expression::UseInterpreter, "i", TypeVec(1), offB);         // run B expr
-    buildAndRun(Expression::UseInterpreter, "A+B+i2*i", TypeVec(3), offC);  // run C expr
+    // Reevaluate with LLVM and compare against the interpreter baseline.
+    std::fill(A.begin(), A.end(), 0);
+    std::fill(B.begin(), B.end(), 0);
+    std::fill(C.begin(), C.end(), 0);
+    buildAndRun(Expression::UseLLVM, "i", TypeVec(3), offA);
+    buildAndRun(Expression::UseLLVM, "i", TypeVec(1), offB);
+    buildAndRun(Expression::UseLLVM, "A+B+i2*i", TypeVec(3), offC);
     // compare two results
-    bool good = true;
     good &= compareVecs("A", Abak, A);
     good &= compareVecs("B", Bbak, B);
     good &= compareVecs("C", Cbak, C);
+#else
+    std::cerr << "Interpreter block checks completed; LLVM comparison unavailable in this build" << std::endl;
+#endif
     if (getenv("SE_EXPR_DEBUG")) {
         printVec("I", I);
         printVec("A", A);

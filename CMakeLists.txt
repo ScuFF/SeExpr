@@ -23,7 +23,7 @@ set(${PROJECT_NAME}_VERSION "2.0")
 set(${PROJECT_NAME}_MAJOR_VERSION 2)
 set(${PROJECT_NAME}_MINOR_VERSION 0)
 
-enable_testing()
+include(CTest)
 
 ## Silence installation messages
 set(CMAKE_INSTALL_MESSAGE LAZY)
