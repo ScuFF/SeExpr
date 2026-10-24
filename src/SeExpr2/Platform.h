@@ -78,7 +78,9 @@ typedef __int64 FilePos;
 #define fseeko _fseeki64
 #define ftello _ftelli64
 
+#if defined(_MSC_VER) && _MSC_VER < 1800
 inline double log2(double x) { return log(x) * 1.4426950408889634; }
+#endif
 
 typedef unsigned int uint32_t;
 #define M_E (2.7182818284590452354)

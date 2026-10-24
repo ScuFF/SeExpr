@@ -23,6 +23,7 @@
 #include <cstring>
 #include <png.h>
 #include <fstream>
+#include <vector>
 
 #include <SeExpr2/Expression.h>
 #include <SeExpr2/Vec.h>
@@ -299,11 +300,11 @@ int main(int argc, char* argv[]) {
                  PNG_INTERLACE_NONE,
                  PNG_COMPRESSION_TYPE_DEFAULT,
                  PNG_FILTER_TYPE_DEFAULT);
-    const unsigned char* ptrs[height];
+    std::vector<png_bytep> ptrs(height);
     for (int i = 0; i < height; i++) {
         ptrs[i] = &image[width * i * 4];
     }
-    png_set_rows(png_ptr, info_ptr, (png_byte**)ptrs);
+    png_set_rows(png_ptr, info_ptr, ptrs.data());
     png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, 0);
 
     fclose(fp);

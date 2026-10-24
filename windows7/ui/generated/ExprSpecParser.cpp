@@ -1155,7 +1155,9 @@ while (ExprSpecYYID (0))
 
 /* Print *ExprSpecYYLOCP on ExprSpecYYO.  Private, do not rely on its existence. */
 
+#if defined(__GNUC__) || defined(__clang__)
 __attribute__((__unused__))
+#endif
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static unsigned
