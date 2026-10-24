@@ -19,18 +19,7 @@
 
 %ConvertFromTypeCode
     // convert an std::string to a Python (unicode) string
-    PyObject* newstring;
-    newstring = PyUnicode_DecodeUTF8(sipCpp->c_str(), sipCpp->length(), NULL);
-    if(newstring == NULL) {
-        PyErr_Clear();
-
-#if PY_MAJOR_VERSION < 3
-        newstring = PyString_FromString(sipCpp->c_str());
-#else
-        newstring = PyUnicode_FromString(sipCpp->c_str());
-#endif
-    }
-    return newstring;
+    return PyUnicode_DecodeUTF8(sipCpp->data(), sipCpp->size(), NULL);
 %End
 
 %ConvertToTypeCode
@@ -38,33 +27,17 @@
      // expected.
      // If argument is a Unicode string, just decode it to UTF-8
      // If argument is a Python string, assume it's UTF-8
-     if (sipIsErr == NULL)
-#if PY_MAJOR_VERSION < 3
-                return (PyString_Check(sipPy) || PyUnicode_Check(sipPy));
-#else
-                return PyUnicode_Check(sipPy);
-#endif
-        if (sipPy == Py_None) {
-                *sipCppPtr = new std::string;
-                return 1;
-        }
-        if (PyUnicode_Check(sipPy))        {
-        PyObject* s = PyUnicode_AsEncodedString(sipPy, "UTF-8", "");
-#if PY_MAJOR_VERSION < 3
-        *sipCppPtr = new std::string(PyString_AS_STRING(s));
-#else
-        *sipCppPtr = new std::string(PyUnicode_AS_DATA(s));
-#endif
-        Py_DECREF(s);
-        return 1;
-        }
-#if PY_MAJOR_VERSION < 3
-        if (PyString_Check(sipPy)) {
-        *sipCppPtr = new std::string(PyString_AS_STRING(sipPy));
-            return 1;
-        }
-#endif
-    return 0;
+    if (sipIsErr == NULL)
+        return PyUnicode_Check(sipPy);
+
+    Py_ssize_t size;
+    const char* value = PyUnicode_AsUTF8AndSize(sipPy, &size);
+    if (value == NULL) {
+        *sipIsErr = 1;
+        return 0;
+    }
+    *sipCppPtr = new std::string(value, size);
+    return sipGetState(sipTransferObj);
 %End
 };
 
@@ -108,9 +81,8 @@ public:
     ExprEditor(QWidget* parent /TransferThis/,ExprControlCollection* collection);
 
 signals:
-    void applyExpression(); // This is when text or controls are manipulated
-    //void needNewPreview();
-    void clearExpression();
+    void apply();
+    void preview();
 
 public slots:
     void exprChanged();
@@ -152,7 +124,7 @@ class ExprBrowser : QWidget
 
 
 public:
-    ExprBrowser(QWidget* parent /TransferThis/, ExprEditor* editor /TransferThis/);
+    ExprBrowser(QWidget* parent /TransferThis/, ExprEditor* editor);
 
     void addPath(const std::string& name,const std::string& path);
     std::string getSelectedPath();
@@ -226,7 +198,7 @@ class ExprCurve:QWidget{
 #include "ExprCurve.h"
 %End
 public:
-    ExprCurve(QWidget* parent = NULL, QString pLabel = "", QString vLabel = "", QString iLabel = "");
+    ExprCurve(QWidget* parent = NULL, QString pLabel = "", QString vLabel = "", QString iLabel = "", bool expandable = true);
 };
 
 class ExprColorCurve:QWidget{
@@ -234,7 +206,7 @@ class ExprColorCurve:QWidget{
 #include "ExprColorCurve.h"
 %End
 public:
-    ExprColorCurve(QWidget* parent = NULL, QString pLabel = "", QString vLabel = "", QString iLabel = "");
+    ExprColorCurve(QWidget* parent = NULL, QString pLabel = "", QString vLabel = "", QString iLabel = "", bool expandable = true);
 };
 
 

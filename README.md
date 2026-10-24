@@ -12,6 +12,10 @@
 
 ## Super impatient CMake building and installing guide
 
+Requires CMake 3.16 or later. Python discovery uses CMake's `FindPython`;
+existing `PYTHON_EXECUTABLE`, `PYTHON_INCLUDE_DIR`, `PYTHON_LIBRARY`, and
+`PYTHON_DEBUG_LIBRARY` overrides are forwarded for compatibility.
+
 ```bash
 $ git clone https://github.com/wdas/SeExpr
 $ cd SeExpr
@@ -29,6 +33,34 @@ function grapher... e.g.
 ```
 
 ## Getting started
+
+### Qt Python editor bindings
+
+With `USE_PYTHON=ON` and Qt5 available, the `expreditor2` target uses SIP 6
+and PyQt5 from the selected `PYTHON_EXECUTABLE` environment. Install their
+build/runtime packages into that environment:
+
+```bash
+python -m pip install "sip>=6.8,<7" "PyQt5>=5.15.11,<5.16"
+```
+
+The binding generator requires Python 3.11 or later. It generates wrappers
+inside the CMake build directory; CMake compiles and links them against the
+native Qt5 SDK. The SDK must be compatible with the Qt version used by PyQt5.
+Legacy SIP 4, `sipconfig`, PyQt4, and `distutils` are not used by this target.
+The separate core Python module still requires Boost.Python.
+
+```bash
+cmake --build build --target expreditor2
+ctest --test-dir build -R '^qtPythonBindings$' --output-on-failure
+```
+
+The smoke test is registered when `BUILD_TESTS=ON`; it creates widgets using
+Qt's offscreen platform and checks expression text, Unicode conversion, and
+signal connections. On Windows the module is built with the `.pyd` suffix.
+For the normal PyQt5 wheels, use a Release native build: Debug configurations
+require matching Qt/Python runtime and development libraries and have not
+been validated. Linux builds of the modernized binding are also unverified.
 
 Examining the demo applications in src/demo is a great way to see
 some usage examples of the library. The basic strategy is to subclass

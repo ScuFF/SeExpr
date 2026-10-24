@@ -135,81 +135,56 @@ if (Qt5_FOUND OR QT4_FOUND)
             FILES_MATCHING PATTERN "*.h")
 
     if(USE_PYTHON)
-        # Generate python module expreditor2, using sip
-        find_program(SIP_EXEC sip)
-
-        macro(get_build_info NAME STORAGE)
-            execute_process(
-                COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/src/build/build-info ${NAME}
-                OUTPUT_VARIABLE ${STORAGE}
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
-        endmacro()
-
-        get_build_info(python-site PYTHON_SITE)
-        get_build_info(python-inc PYTHON_INCLUDE_DIR)
-        get_build_info(sip-inc SIP_INCLUDE_DIR)
-
-        if (NOT DEFINED PYQT_SIP_FLAGS)
-            if (ENABLE_QT5)
-                get_build_info(pyqt5-sip-flags PYQT_SIP_FLAGS)
-            else()
-                get_build_info(pyqt4-sip-flags PYQT_SIP_FLAGS)
-            endif()
-            separate_arguments(PYQT_SIP_FLAGS)
+        if (NOT ENABLE_QT5)
+            message(FATAL_ERROR "Modern Qt Python bindings require Qt5/PyQt5")
         endif()
 
-        if (NOT DEFINED PYQT_SIP_DIR)
-            get_build_info(pyqt4-sip PYQT_SIP_DIR)
-            if (NOT DEFINED PYQT_SIP_DIR)
-               message(FATAL_ERROR "PYQT_SIP_DIR must be defined")
-            endif()
+        set(UI_BINDING_GENERATOR "${PROJECT_SOURCE_DIR}/src/build/generate_ui_bindings.py")
+        execute_process(
+            COMMAND "${PYTHON_EXECUTABLE}" "${UI_BINDING_GENERATOR}" --check
+            RESULT_VARIABLE UI_BINDING_CHECK
+            OUTPUT_VARIABLE PYQT_BINDINGS_DIR
+            ERROR_VARIABLE UI_BINDING_ERROR
+            OUTPUT_STRIP_TRAILING_WHITESPACE)
+        if (NOT UI_BINDING_CHECK EQUAL 0)
+            message(FATAL_ERROR "Cannot generate Qt Python bindings: ${UI_BINDING_ERROR}")
         endif()
 
-        set(CMAKE_INSTALL_PYTHON "${PYTHON_SITE}/SeExpr2" )
+        set(UI_SIP_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/sip")
+        set(UI_SIP_GENERATED_DIR "${UI_SIP_BUILD_DIR}/generated")
+        set(UI_SIP_CPP "${UI_SIP_GENERATED_DIR}/expreditor2/sipexpreditor2part0.cpp")
+        file(GLOB_RECURSE PYQT_BINDING_INPUTS "${PYQT_BINDINGS_DIR}/*.sip" "${PYQT_BINDINGS_DIR}/*.toml")
+        add_custom_command(
+            OUTPUT "${UI_SIP_CPP}" "${UI_SIP_GENERATED_DIR}/expreditor2/sipAPIexpreditor2.h" "${UI_SIP_GENERATED_DIR}/sip.h"
+            COMMAND "${PYTHON_EXECUTABLE}" "${UI_BINDING_GENERATOR}"
+                    --sip-file "${CMAKE_CURRENT_SOURCE_DIR}/SeExpr2Editor.sip"
+                    --build-dir "${UI_SIP_BUILD_DIR}"
+            DEPENDS "${UI_BINDING_GENERATOR}" SeExpr2Editor.sip ${PYQT_BINDING_INPUTS}
+            COMMENT "Generating Qt editor bindings with SIP 6"
+            VERBATIM)
 
-        set(CMAKE_CXX_FLAGS "-std=c++11")
-        include_directories(${SIP_INCLUDE_DIR}
-                            ${PYQT_SIP_DIR}
-                            ${PYTHON_INCLUDE_DIR})
-
-        add_custom_command(OUTPUT sipexpreditor2part0.cpp
-                           DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/SeExpr2Editor.sip
-                           COMMENT 'Processing SeExpr2Editor.sip'
-                           COMMAND ${SIP_EXEC} -w -c .
-                           ${PYQT_SIP_FLAGS}
-                           -j 1
-                           -I. -I${PYQT_SIP_DIR} -I${SIP_INCLUDE_DIR}
-                           ${CMAKE_CURRENT_SOURCE_DIR}/SeExpr2Editor.sip
-                           VERBATIM)
-
-        add_library(expreditor2 SHARED sipexpreditor2part0.cpp)
-        target_link_libraries(expreditor2 SeExpr2Editor ${SEEXPR_LIBRARIES}
-                              ${OPENGL_LIBRARY} ${GLUT_LIBRARY} ${PYTHON_LIBRARIES})
-
-        if (ENABLE_QT5)
-            target_link_libraries(expreditor2 SeExpr2Editor
-                                  Qt5::Core
-                                  Qt5::Gui
-                                  Qt5::Widgets
-                                  Qt5::OpenGL)
-        else()
-            target_link_libraries(expreditor2 SeExpr2Editor
-                                  ${QT_QTCORE_LIBRARY}
-                                  ${QT_QTGUI_LIBRARY}
-                                  ${QT_QTOPENGL_LIBRARY})
-        endif()
-
-        # No prefix on python module name
+        add_library(expreditor2 MODULE "${UI_SIP_CPP}")
+        target_compile_features(expreditor2 PRIVATE cxx_std_17)
+        target_include_directories(expreditor2 PRIVATE
+            "${UI_SIP_GENERATED_DIR}" "${PYTHON_INCLUDE_DIRS}")
+        target_link_libraries(expreditor2 PRIVATE SeExpr2Editor SeExpr2
+            Qt5::Core Qt5::Gui Qt5::Widgets Qt5::OpenGL ${PYTHON_LIBRARIES})
         set_target_properties(expreditor2 PROPERTIES PREFIX "")
-        # Python modules require a ".so" suffix on macOS
-        if (APPLE)
+        if (WIN32)
+            set_target_properties(expreditor2 PROPERTIES SUFFIX ".pyd")
+        elseif(APPLE)
             set_target_properties(expreditor2 PROPERTIES SUFFIX ".so")
         endif()
 
-        install(TARGETS expreditor2
-                EXPORT ${PROJECT_NAME}
-                DESTINATION ${CMAKE_INSTALL_PYTHON})
-        install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py
-                DESTINATION ${CMAKE_INSTALL_PYTHON})
+        set(CMAKE_INSTALL_PYTHON "${CMAKE_INSTALL_LIBDIR}/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/SeExpr2"
+            CACHE STRING "Relative install directory for the Qt Python bindings")
+        install(TARGETS expreditor2 DESTINATION "${CMAKE_INSTALL_PYTHON}")
+        install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/__init__.py"
+                DESTINATION "${CMAKE_INSTALL_PYTHON}")
+        if (BUILD_TESTS)
+            add_test(NAME qtPythonBindings
+                COMMAND "${PYTHON_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/src/tests/qtPythonBindings.py"
+                        --module-dir "$<TARGET_FILE_DIR:expreditor2>")
+        endif()
     endif()
 endif()

@@ -67,11 +67,25 @@ if (USE_PYTHON)
     message(STATUS "BOOST_LIB_DIR = ${BOOST_LIB_DIR}")
 
     include_directories(../SeExpr2/parser)
-    add_library(core SHARED SeExprPy.cpp ../SeExpr2/parser/SeExprParse.cpp ../SeExpr2/parser/SeExprLex.cpp)
+    add_library(core MODULE SeExprPy.cpp ../SeExpr2/parser/SeExprParse.cpp ../SeExpr2/parser/SeExprLex.cpp)
 
     target_link_libraries(core ${PYTHON_LIBRARIES})
     target_link_libraries(core ${BOOST_PYTHON_LIBNAME})
     set_target_properties(core PROPERTIES PREFIX "")
+    set_target_properties(core PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/python/$<CONFIG>/SeExprPy"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/python/$<CONFIG>/SeExprPy")
+    if (WIN32)
+        set_target_properties(core PROPERTIES SUFFIX ".pyd")
+    endif()
+    set_property(TARGET core APPEND PROPERTY LINK_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/__init__.py" "${CMAKE_CURRENT_SOURCE_DIR}/utils.py")
+    add_custom_command(TARGET core POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                "${CMAKE_CURRENT_SOURCE_DIR}/__init__.py" "${CMAKE_CURRENT_SOURCE_DIR}/utils.py"
+                "$<TARGET_FILE_DIR:core>"
+        COMMENT "Staging the SeExprPy package for build-tree imports"
+        VERBATIM)
     # Python modules require a ".so" suffix on macOS
     if (APPLE)
         set_target_properties(core PROPERTIES SUFFIX ".so")

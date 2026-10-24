@@ -13,7 +13,7 @@
 # You may obtain a copy of the License at
 # http://www.apache.org/licenses/LICENSE-2.0
 
-cmake_minimum_required(VERSION 3.8.0)
+cmake_minimum_required(VERSION 3.16)
 
 ## project name & version
 project(seexpr2)
@@ -74,10 +74,27 @@ set(INCLUDE_DIR "${CMAKE_INSTALL_INCLUDEDIR}/SeExpr2")
 # TODO: find GTEST and boost and python the proper ways
 set(BOOST_DIR /usr CACHE PATH "where boost is located")
 
-find_package(PythonInterp) # provides Python version check
-find_package(PythonLibs)
-# TODO: switch to FindPython
-#find_package(Python COMPONENTS Interpreter Development)
+# Preserve explicit legacy cache overrides while using the supported finder.
+if (PYTHON_EXECUTABLE)
+    set(Python_EXECUTABLE "${PYTHON_EXECUTABLE}")
+endif()
+if (PYTHON_INCLUDE_DIR)
+    set(Python_INCLUDE_DIR "${PYTHON_INCLUDE_DIR}")
+endif()
+if (PYTHON_LIBRARY)
+    set(Python_LIBRARY_RELEASE "${PYTHON_LIBRARY}")
+endif()
+if (PYTHON_DEBUG_LIBRARY)
+    set(Python_LIBRARY_DEBUG "${PYTHON_DEBUG_LIBRARY}")
+endif()
+find_package(Python 3 COMPONENTS Interpreter Development)
+set(PYTHON_EXECUTABLE "${Python_EXECUTABLE}")
+set(PYTHON_INCLUDE_DIR "${Python_INCLUDE_DIRS}")
+set(PYTHON_INCLUDE_DIRS "${Python_INCLUDE_DIRS}")
+set(PYTHON_LIBRARIES "${Python_LIBRARIES}")
+set(PYTHON_VERSION_MAJOR "${Python_VERSION_MAJOR}")
+set(PYTHON_VERSION_MINOR "${Python_VERSION_MINOR}")
+set(PYTHON_VERSION_STRING "${Python_VERSION}")
 
 if(PYTHON_VERSION_MAJOR LESS 3)
     set(BOOST_PYTHON_LIBNAME boost_python CACHE STRING "what library name for boost python")
