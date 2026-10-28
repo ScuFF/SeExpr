@@ -134,7 +134,8 @@ if (Qt5_FOUND OR QT4_FOUND)
             DESTINATION ${INCLUDE_DIR}/UI
             FILES_MATCHING PATTERN "*.h")
 
-    if(USE_PYTHON)
+    option(USE_QT_PYTHON "Build Qt Python bindings" ${USE_PYTHON})
+    if(USE_PYTHON AND USE_QT_PYTHON)
         if (NOT ENABLE_QT5)
             message(FATAL_ERROR "Modern Qt Python bindings require Qt5/PyQt5")
         endif()
