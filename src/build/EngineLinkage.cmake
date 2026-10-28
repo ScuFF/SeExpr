@@ -19,6 +19,16 @@ if(NOT SEEXPR_DEFAULT_LINKAGE MATCHES "^(STATIC|SHARED)$")
     message(FATAL_ERROR "SEEXPR_DEFAULT_LINKAGE must be STATIC or SHARED")
 endif()
 
+# Empty leaves standard CMake output-directory behavior intact.
+set(SEEXPR_RUNTIME_OUTPUT_DIRECTORY "" CACHE PATH "Optional common directory for SeExpr runtime binaries")
+function(seexpr_set_runtime_output target)
+    if(SEEXPR_RUNTIME_OUTPUT_DIRECTORY)
+        set_target_properties(${target} PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${SEEXPR_RUNTIME_OUTPUT_DIRECTORY}"
+            LIBRARY_OUTPUT_DIRECTORY "${SEEXPR_RUNTIME_OUTPUT_DIRECTORY}")
+    endif()
+endfunction()
+
 function(seexpr_link_engine target)
     set(setting "SEEXPR_LINKAGE_${target}")
     set(${setting} DEFAULT CACHE STRING "Engine linkage for ${target}")
@@ -40,6 +50,7 @@ function(seexpr_link_engine target)
     if("EDITOR" IN_LIST ARGN)
         target_link_libraries(${target} ${editor})
     endif()
+    seexpr_set_runtime_output(${target})
     set_property(TARGET ${target} PROPERTY SEEXPR_ENGINE_LINKAGE "${linkage}")
     message(STATUS "${target}: ${linkage} SeExpr engine")
 endfunction()

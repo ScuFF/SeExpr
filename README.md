@@ -109,6 +109,16 @@ SHARED elsewhere. `SEEXPR_LINKAGE_<target>=DEFAULT|STATIC|SHARED` overrides one
 application or module; DEFAULT follows the global selection. Editor consumers
 select a matching editor library to avoid loading both engines into one process.
 
+`SEEXPR_RUNTIME_OUTPUT_DIRECTORY` optionally places native applications, the
+shared engine/editor, and the Qt Python module in a common build-tree directory.
+It is empty by default, leaving normal CMake output-directory behavior intact,
+including standard `CMAKE_RUNTIME_OUTPUT_DIRECTORY` and
+`CMAKE_LIBRARY_OUTPUT_DIRECTORY` settings. On Windows a common directory can
+simplify DLL discovery for shared applications. With default directories, arrange
+DLL discovery separately when running shared applications. Multi-configuration
+generators retain CMake's configuration subdirectories unless explicitly overridden.
+The AST Python package retains its separate Python-package staging directory.
+
 These are standalone SeExpr options: callers provide their own dependencies and
 installation prefix. They do not download SDKs or require a parent project.
 

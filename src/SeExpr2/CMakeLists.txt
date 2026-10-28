@@ -87,6 +87,7 @@ add_library(${seexpr_static_engine} STATIC ${io_cpp} ${core_cpp} ${parser_cpp} $
 add_library(${seexpr_shared_engine} SHARED ${io_cpp} ${core_cpp} ${parser_cpp} ${llvm_cpp})
 target_compile_definitions(${seexpr_static_engine} PUBLIC SEEXPR2_STATIC_DEFINE)
 set_target_properties(${seexpr_shared_engine} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+seexpr_set_runtime_output(${seexpr_shared_engine})
 if (NOT WIN32)
     set_target_properties(${seexpr_static_engine} PROPERTIES POSITION_INDEPENDENT_CODE ON)
     target_link_libraries(${seexpr_static_engine} "dl" "pthread")

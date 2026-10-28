@@ -153,6 +153,8 @@ if (Qt5_FOUND OR QT4_FOUND)
     install(TARGETS ${alternate_editor} EXPORT ${PROJECT_NAME}
             DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
+    seexpr_set_runtime_output(SeExpr2Editor)
+    seexpr_set_runtime_output(${alternate_editor})
 
     install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
             DESTINATION ${INCLUDE_DIR}/UI
