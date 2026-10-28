@@ -298,11 +298,9 @@ class LLVMEvaluator {
             Builder.CreateRetVoid();
         }
 
-        if (Expression::debugging) {
-            #ifdef DEBUG
-            std::cerr << "Pre verified LLVM byte code " << std::endl;
+        if (getenv("SE_EXPR_DEBUG_IR")) {
+            std::cerr << "LLVM IR before optimization" << std::endl;
             TheModule->print(llvm::errs(), nullptr);
-            #endif
         }
 
         // TODO: Find out if there is a new way to veirfy
@@ -374,11 +372,9 @@ class LLVMEvaluator {
             _llvmEvalStr->init(fp, fpLoop, dimDesired);
         }
 
-        if (Expression::debugging) {
-            #ifdef DEBUG
-            std::cerr << "Pre verified LLVM byte code " << std::endl;
+        if (getenv("SE_EXPR_DEBUG_IR")) {
+            std::cerr << "LLVM IR after optimization" << std::endl;
             altModule->print(llvm::errs(), nullptr);
-            #endif
         }
 
         return true;
