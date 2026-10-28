@@ -618,16 +618,16 @@ LLVM_VALUE ExprBinaryOpNode::codegen(LLVM_BUILDER Builder) LLVM_BODY {
         LLVM_VALUE len1 = Builder.CreateCall(strlen, { op1 });              // len1 = strlen(op1);
         LLVM_VALUE len2 = Builder.CreateCall(strlen, { op2 });              // len2 = strlen(op2);
         LLVM_VALUE len = Builder.CreateAdd(len1, len2);                     // len = len1 + len2;
+        LLVM_VALUE capacity = Builder.CreateAdd(len, ConstantInt::get(len->getType(), 1));
 
         // allocate and clear memory
-        LLVM_VALUE alloc = Builder.CreateCall(malloc, { len });             // alloc = malloc(len1 + len2);
+        LLVM_VALUE alloc = Builder.CreateCall(malloc, { capacity });        // include the terminating NUL
         LLVM_VALUE zero = ConstantInt::get(i32Ty, 0);                       // zero = 0;
-        Builder.CreateCall(memset, { alloc, zero, len });                   // memset(alloc, zero, len);
+        Builder.CreateCall(memset, { alloc, zero, capacity });
 
         // concatenate operand strings into output string
         Builder.CreateCall(strcat, { alloc, op1 });                         // strcat(alloc, op1);
-        LLVM_VALUE newAlloc = Builder.CreateGEP(nullptr, alloc, len1);      // newAlloc = alloc + len1
-        Builder.CreateCall(strcat, { newAlloc, op2 });                      // strcat(alloc, op2);
+        Builder.CreateCall(strcat, { alloc, op2 });
 
         // store the address in the node's _out member so that it will be
         // cleaned up when the expression is destroyed.

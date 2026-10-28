@@ -177,4 +177,13 @@ TEST(StringTests, BinaryOp) {
     EXPECT_TRUE(expr6.returnType().isString() == true);
     EXPECT_TRUE(expr6.isConstant() == true);
     EXPECT_STREQ(expr6.evalStr(), "ok");
+
+    StringExpression empty("stringVar + ''");
+    empty.stringVar = "";
+    ASSERT_TRUE(empty.isValid());
+    EXPECT_STREQ(empty.evalStr(), "");
+    empty.stringVar = "reused";
+    EXPECT_STREQ(empty.evalStr(), "reused");
+    empty.stringVar = "";
+    EXPECT_STREQ(empty.evalStr(), "");
 }
