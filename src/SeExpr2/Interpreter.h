@@ -83,8 +83,8 @@ class Interpreter {
     void endOp(bool execute = true) {
         _startedOp = false;
         if (execute) {
-            double* fp = &d[0];
-            char** str = &s[0];
+            double* fp = d.data();
+            char** str = s.data();
             int pc = static_cast<int>(ops.size()) - 1;
             const std::pair<OpF, int>& op = ops[pc];
             int* opCurr = &opData[0] + op.second;
