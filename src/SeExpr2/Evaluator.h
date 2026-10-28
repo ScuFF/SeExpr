@@ -116,6 +116,7 @@ class LLVMEvaluator {
         Type        *i32Ty          = Type::getInt32Ty(*_llvmContext);          // int
         Type        *i32PtrTy       = Type::getInt32PtrTy(*_llvmContext);       // int *
         Type        *i64Ty          = Type::getInt64Ty(*_llvmContext);          // int64 *
+        Type        *sizeTy         = Type::getIntNTy(*_llvmContext, sizeof(size_t) * 8);
         Type        *doublePtrTy    = Type::getDoublePtrTy(*_llvmContext);      // double *
         PointerType *doublePtrPtrTy = PointerType::getUnqual(doublePtrTy);      // double **
         Type        *voidTy         = Type::getVoidTy(*_llvmContext);           // void
@@ -143,11 +144,11 @@ class LLVMEvaluator {
                 SeExpr2LLVMEvalStrVarRefFunc = Function::Create(FT, GlobalValue::ExternalLinkage, "SeExpr2LLVMEvalStrVarRef", TheModule.get());
             }
             {
-                FunctionType *FT = FunctionType::get(i32Ty, { i8PtrTy }, false);
+                FunctionType *FT = FunctionType::get(sizeTy, { i8PtrTy }, false);
                 SeExpr2LLVMEvalstrlenFunc = Function::Create(FT, Function::ExternalLinkage, "strlen", TheModule.get());
             }
             {
-                FunctionType *FT = FunctionType::get(i8PtrTy, { i32Ty }, false);
+                FunctionType *FT = FunctionType::get(i8PtrTy, { sizeTy }, false);
                 SeExpr2LLVMEvalmallocFunc = Function::Create(FT, Function::ExternalLinkage, "malloc", TheModule.get());
             }
             {
@@ -155,7 +156,7 @@ class LLVMEvaluator {
                 SeExpr2LLVMEvalfreeFunc = Function::Create(FT, Function::ExternalLinkage, "free", TheModule.get());
             }
             {
-                FunctionType *FT = FunctionType::get(voidTy, { i8PtrTy, i32Ty, i32Ty }, false);
+                FunctionType *FT = FunctionType::get(i8PtrTy, { i8PtrTy, i32Ty, sizeTy }, false);
                 SeExpr2LLVMEvalmemsetFunc = Function::Create(FT, Function::ExternalLinkage, "memset", TheModule.get());
             }
             {
