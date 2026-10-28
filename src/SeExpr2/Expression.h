@@ -24,6 +24,7 @@
 #include <iomanip>
 #include <stdint.h>
 #include "ExprConfig.h"
+#include "seexpr2_export.h"
 #include "Vec.h"
 #include "Context.h"
 #include "ExprEnv.h"
@@ -81,9 +82,9 @@ class Expression {
         UseLLVM
     };
     //! What evaluation strategy to use by default
-    static EvaluationStrategy defaultEvaluationStrategy;
+    static SEEXPR2_EXPORT EvaluationStrategy defaultEvaluationStrategy;
     //! Whether to debug expressions
-    static bool debugging;
+    static SEEXPR2_EXPORT bool debugging;
 
     // typedef std::map<std::string, ExprLocalVarRef> LocalVarTable;
 

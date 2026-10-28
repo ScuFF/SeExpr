@@ -20,11 +20,13 @@ if (PNG_FOUND)
     include_directories(SYSTEM ${PNG_INCLUDE_DIR})
 
     add_executable(imageSynth2 "imageSynth.cpp")
-    target_link_libraries(imageSynth2 ${PNG_LIBRARIES} ${SEEXPR_LIBRARIES})
+    target_link_libraries(imageSynth2 ${PNG_LIBRARIES})
+    seexpr_link_engine(imageSynth2)
     install(TARGETS imageSynth2 DESTINATION bin)
 
     add_executable(imageSynthPaint3d2 "imageSynthForPaint3d.cpp")
-    target_link_libraries(imageSynthPaint3d2 ${PNG_LIBRARIES} ${SEEXPR_LIBRARIES})
+    target_link_libraries(imageSynthPaint3d2 ${PNG_LIBRARIES})
+    seexpr_link_engine(imageSynthPaint3d2)
     install(TARGETS imageSynthPaint3d2 DESTINATION bin)
     install(DIRECTORY examples DESTINATION share/SeExpr2/demos/imageSynth
             USE_SOURCE_PERMISSIONS)

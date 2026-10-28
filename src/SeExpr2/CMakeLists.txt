@@ -82,33 +82,42 @@ endif()
 
 ## Make the SeExpr library with and without LLVM support
 file(GLOB llvm_cpp "*.cpp")
+# Preserve the established SeExpr2 target: static on Windows, shared elsewhere.
+add_library(${seexpr_static_engine} STATIC ${io_cpp} ${core_cpp} ${parser_cpp} ${llvm_cpp})
+add_library(${seexpr_shared_engine} SHARED ${io_cpp} ${core_cpp} ${parser_cpp} ${llvm_cpp})
+target_compile_definitions(${seexpr_static_engine} PUBLIC SEEXPR2_STATIC_DEFINE)
+set_target_properties(${seexpr_shared_engine} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 if (NOT WIN32)
-    add_library(SeExpr2 SHARED ${io_cpp} ${core_cpp} ${parser_cpp} ${llvm_cpp})
-    target_link_libraries(SeExpr2 "dl" "pthread")
-else()
-    add_library(SeExpr2 STATIC ${io_cpp} ${core_cpp} ${parser_cpp} ${llvm_cpp})
+    set_target_properties(${seexpr_static_engine} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    target_link_libraries(${seexpr_static_engine} "dl" "pthread")
+    target_link_libraries(${seexpr_shared_engine} PRIVATE "dl" "pthread")
 endif()
 
-set_property(TARGET SeExpr2 PROPERTY VERSION ${seexpr2_VERSION})
-set_property(TARGET SeExpr2 PROPERTY SOVERSION ${seexpr2_MAJOR_VERSION})
-set_property(TARGET SeExpr2 PROPERTY
-             INTERFACE_SeExpr2_MAJOR_VERSION ${seexpr2_MAJOR_VERSION})
-set_property(TARGET SeExpr2 APPEND PROPERTY
-             COMPATIBLE_INTERFACE_STRING ${seexpr2_MAJOR_VERSION})
+foreach(linkage STATIC SHARED)
+    if(linkage STREQUAL STATIC)
+        set(engine ${seexpr_static_engine})
+    else()
+        set(engine ${seexpr_shared_engine})
+    endif()
+    set_target_properties(${engine} PROPERTIES
+        VERSION ${seexpr2_VERSION} SOVERSION ${seexpr2_MAJOR_VERSION}
+        INTERFACE_SeExpr2_MAJOR_VERSION ${seexpr2_MAJOR_VERSION}
+        INTERFACE_SeExpr2_LINKAGE ${linkage})
+    set_property(TARGET ${engine} APPEND PROPERTY
+        COMPATIBLE_INTERFACE_STRING SeExpr2_MAJOR_VERSION SeExpr2_LINKAGE)
+    target_include_directories(${engine} PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+endforeach()
 
-generate_export_header(SeExpr2)
+generate_export_header(${seexpr_shared_engine} BASE_NAME SeExpr2 EXPORT_FILE_NAME seexpr2_export.h)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/seexpr2_export.h"
         COMPONENT devel DESTINATION ${INCLUDE_DIR})
 
-# When targets are consumed downstream they should only add the top-level
-# $prefix/include directory.  Downstream consumers are expected to
-# use #include <project-name/header.h>.
-target_include_directories(SeExpr2 PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-
-## Install binary and includes
-install(TARGETS SeExpr2
-        EXPORT ${PROJECT_NAME}
+install(TARGETS ${seexpr_static_engine} EXPORT ${PROJECT_NAME}
         DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS ${seexpr_shared_engine} EXPORT ${PROJECT_NAME}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/"
         COMPONENT devel DESTINATION ${INCLUDE_DIR}
@@ -121,9 +130,11 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ExprConfig.h"
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 if (ENABLE_LLVM_BACKEND)
+    # LLVM stays private to the shared engine; applications link only its API.
+    target_link_libraries(${seexpr_shared_engine} PRIVATE ${LLVM_LIB})
     if (NOT WIN32)
-        target_link_libraries(SeExpr2 ${LLVM_LIB} "dl" "pthread")
+        target_link_libraries(${seexpr_static_engine} ${LLVM_LIB} "dl" "pthread")
     else ()
-        target_link_libraries(SeExpr2 ${LLVM_LIB})
+        target_link_libraries(${seexpr_static_engine} ${LLVM_LIB})
     endif ()
 endif()

@@ -93,6 +93,25 @@ src/
    doc/      Doxygen generation
 ```
 
+## CMake engine linkage and runtime output
+
+The existing `SeExpr2` library target retains its platform-specific linkage:
+static on Windows, shared on other platforms. The alternative library is
+`SeExpr2Shared` on Windows and `SeExpr2Static` elsewhere. Installed CMake targets
+use the `seexpr2::` namespace. `SeExpr2Editor` continues to use the existing
+`SeExpr2` engine; the alternative editor is `SeExpr2EditorShared` on Windows
+and `SeExpr2EditorStatic` elsewhere. The editor library's own type is separate
+from the engine linkage its name selects.
+
+`SEEXPR_DEFAULT_LINKAGE=STATIC|SHARED` selects the engine used by bundled
+applications and the Qt Python module. Its default is STATIC on Windows and
+SHARED elsewhere. `SEEXPR_LINKAGE_<target>=DEFAULT|STATIC|SHARED` overrides one
+application or module; DEFAULT follows the global selection. Editor consumers
+select a matching editor library to avoid loading both engines into one process.
+
+These are standalone SeExpr options: callers provide their own dependencies and
+installation prefix. They do not download SDKs or require a parent project.
+
 ## SeExpr Developers
 
  * David Aguilar

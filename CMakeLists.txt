@@ -37,6 +37,7 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 include(GenerateExportHeader)
 include(src/build/macros.cmake)
+include(src/build/EngineLinkage.cmake)
 
 # Default installation prefix
 if (NOT DEFINED FLAVOR)

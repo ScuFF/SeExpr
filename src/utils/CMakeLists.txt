@@ -17,6 +17,6 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/../SeExpr2)
 
 foreach(item eval listVar)
     add_executable("${item}" "${item}.cpp")
-    target_link_libraries("${item}" ${SEEXPR_LIBRARIES})
+    seexpr_link_engine("${item}")
     install(TARGETS "${item}" DESTINATION share/SeExpr2/utils)
 endforeach()

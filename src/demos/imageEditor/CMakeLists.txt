@@ -70,8 +70,7 @@ else()
     target_link_libraries(imageEditor2 ${QT_QTGUI_LIBRARY})
 endif()
 
-    target_link_libraries(imageEditor2 ${SEEXPR_LIBRARIES})
-    target_link_libraries(imageEditor2 ${SEEXPR_EDITOR_LIBRARIES})
+    seexpr_link_engine(imageEditor2 EDITOR)
 
     include_directories(SYSTEM ${PNG_INCLUDE_DIR})
     target_link_libraries(imageEditor2 ${PNG_LIBRARIES})

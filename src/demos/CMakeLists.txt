@@ -16,11 +16,11 @@
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/../SeExpr2)
 
 add_executable(asciiGraph2 "asciiGraph.cpp")
-target_link_libraries(asciiGraph2 SeExpr2)
+seexpr_link_engine(asciiGraph2)
 install(TARGETS asciiGraph2 DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_executable(asciiCalc2 "asciiCalculator.cpp")
-target_link_libraries(asciiCalc2 SeExpr2)
+seexpr_link_engine(asciiCalc2)
 install(TARGETS asciiCalc2 DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 # TODO re-enable

@@ -130,6 +130,30 @@ if (Qt5_FOUND OR QT4_FOUND)
             EXPORT ${PROJECT_NAME}
             DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
+    # The editor object code must match its engine's data import definitions.
+    # The alternate editor library uses the other engine linkage, without
+    # mixing both engines in a single executable or Python module.
+    if(WIN32)
+        set(alternate_editor ${seexpr_shared_editor})
+        set(alternate_engine ${seexpr_shared_engine})
+    else()
+        set(alternate_editor ${seexpr_static_editor})
+        set(alternate_engine ${seexpr_static_engine})
+    endif()
+    get_target_property(editor_sources SeExpr2Editor SOURCES)
+    get_target_property(editor_type SeExpr2Editor TYPE)
+    if(editor_type STREQUAL "STATIC_LIBRARY")
+        add_library(${alternate_editor} STATIC ${editor_sources})
+    else()
+        add_library(${alternate_editor} SHARED ${editor_sources})
+    endif()
+    get_target_property(editor_libraries SeExpr2Editor LINK_LIBRARIES)
+    list(TRANSFORM editor_libraries REPLACE "^SeExpr2$" "${alternate_engine}")
+    target_link_libraries(${alternate_editor} ${editor_libraries})
+    install(TARGETS ${alternate_editor} EXPORT ${PROJECT_NAME}
+            DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+
     install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
             DESTINATION ${INCLUDE_DIR}/UI
             FILES_MATCHING PATTERN "*.h")
@@ -168,8 +192,9 @@ if (Qt5_FOUND OR QT4_FOUND)
         target_compile_features(expreditor2 PRIVATE cxx_std_17)
         target_include_directories(expreditor2 PRIVATE
             "${UI_SIP_GENERATED_DIR}" "${PYTHON_INCLUDE_DIRS}")
-        target_link_libraries(expreditor2 PRIVATE SeExpr2Editor SeExpr2
+        target_link_libraries(expreditor2
             Qt5::Core Qt5::Gui Qt5::Widgets Qt5::OpenGL ${PYTHON_LIBRARIES})
+        seexpr_link_engine(expreditor2 EDITOR)
         set_target_properties(expreditor2 PROPERTIES PREFIX "")
         if (WIN32)
             set_target_properties(expreditor2 PROPERTIES SUFFIX ".pyd")
