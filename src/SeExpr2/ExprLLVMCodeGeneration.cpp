@@ -662,8 +662,19 @@ LLVM_VALUE ExprLocalVar::codegen(LLVM_BUILDER Builder, const std::string &varNam
 }
 
 LLVM_VALUE ExprCompareEqNode::codegen(LLVM_BUILDER Builder) LLVM_BODY {
-    LLVM_VALUE op1 = getFirstElement(child(0)->codegen(Builder), Builder);
-    LLVM_VALUE op2 = getFirstElement(child(1)->codegen(Builder), Builder);
+    LLVM_VALUE op1 = child(0)->codegen(Builder);
+    LLVM_VALUE op2 = child(1)->codegen(Builder);
+
+    if (child(0)->type().isString()) {
+        Value *comparison = Builder.CreateCall(llvm_getModule(Builder)->getFunction("strcmp"), {op1, op2});
+        Value *zero = ConstantInt::get(comparison->getType(), 0);
+        Value *equal = _op == '=' ? Builder.CreateICmpEQ(comparison, zero)
+                                 : Builder.CreateICmpNE(comparison, zero);
+        return Builder.CreateUIToFP(equal, Type::getDoubleTy(Builder.getContext()));
+    }
+
+    op1 = getFirstElement(op1, Builder);
+    op2 = getFirstElement(op2, Builder);
 
     LLVM_VALUE boolVal = 0;
     switch (_op) {

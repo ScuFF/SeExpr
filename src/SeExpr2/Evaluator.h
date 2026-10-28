@@ -130,6 +130,7 @@ class LLVMEvaluator {
         Function *SeExpr2LLVMEvalfreeFunc = nullptr;
         Function *SeExpr2LLVMEvalmemsetFunc = nullptr;
         Function *SeExpr2LLVMEvalstrcatFunc = nullptr;
+        Function *SeExpr2LLVMEvalstrcmpFunc = nullptr;
         {
             {
                 FunctionType *FT = FunctionType::get(voidTy, {i32PtrTy, doublePtrTy, i8PtrPtrTy, i8PtrPtrTy, i64Ty}, false);
@@ -162,6 +163,10 @@ class LLVMEvaluator {
             {
                 FunctionType *FT = FunctionType::get(i8PtrTy, { i8PtrTy, i8PtrTy }, false);
                 SeExpr2LLVMEvalstrcatFunc = Function::Create(FT, Function::ExternalLinkage, "strcat", TheModule.get());
+            }
+            {
+                FunctionType *FT = FunctionType::get(i32Ty, {i8PtrTy, i8PtrTy}, false);
+                SeExpr2LLVMEvalstrcmpFunc = Function::Create(FT, Function::ExternalLinkage, "strcmp", TheModule.get());
             }
         }
 
@@ -321,6 +326,7 @@ class LLVMEvaluator {
         TheExecutionEngine->addGlobalMapping(SeExpr2LLVMEvalCustomFunctionFunc, (void *)SeExpr2LLVMEvalCustomFunction);
         TheExecutionEngine->addGlobalMapping(SeExpr2LLVMEvalstrlenFunc, (void *)strlen);
         TheExecutionEngine->addGlobalMapping(SeExpr2LLVMEvalstrcatFunc, (void *)strcat);
+        TheExecutionEngine->addGlobalMapping(SeExpr2LLVMEvalstrcmpFunc, (void *)strcmp);
         TheExecutionEngine->addGlobalMapping(SeExpr2LLVMEvalmemsetFunc, (void *)memset);
         TheExecutionEngine->addGlobalMapping(SeExpr2LLVMEvalmallocFunc, (void *)malloc);
         TheExecutionEngine->addGlobalMapping(SeExpr2LLVMEvalfreeFunc, (void *)free);
