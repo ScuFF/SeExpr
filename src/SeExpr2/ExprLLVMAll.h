@@ -31,7 +31,6 @@
 #include <llvm/Analysis/Passes.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/GenericValue.h>
-#include <llvm/ExecutionEngine/Interpreter.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
 #include <llvm/InitializePasses.h>
@@ -44,7 +43,7 @@
 #include <llvm/IR/Function.h>
 #include "llvm/IR/Verifier.h"
 #include <llvm/Transforms/IPO/PassManagerBuilder.h>
-#include <llvm/LinkAllPasses.h>
+#include <llvm/Transforms/IPO/AlwaysInliner.h>
 #include <llvm/Support/DynamicLibrary.h>
 #include <llvm/Support/ManagedStatic.h>
 #include <llvm/Support/TargetSelect.h>

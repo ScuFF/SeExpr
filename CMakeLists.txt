@@ -137,7 +137,7 @@ if (ENABLE_LLVM_BACKEND)
         set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${LLVM_DIR}")
         include(LLVM-Config)
         include(LLVMConfig)
-        include(HandleLLVMOptions)
+        # HandleLLVMOptions configures LLVM's own build, not its consumers.
 
         message(STATUS "LLVM_DEFINITIONS =" ${LLVM_DEFINITIONS})
         add_definitions(${LLVM_DEFINITIONS})
@@ -175,7 +175,11 @@ if (ENABLE_LLVM_BACKEND)
         endif ()
         message(STATUS "LLVM_VERSION = ${LLVM_VERSION}")
 
-        set(LLVM_LIB LLVM)
+        # Windows SDKs provide static component libraries, not libLLVM.
+        # Imported component targets carry their transitive dependencies.
+        llvm_map_components_to_libnames(LLVM_LIB
+            core executionengine mcjit native ipo scalaropts vectorize
+            instcombine instrumentation transformutils analysis)
         message(STATUS "LLVM_LIB = ${LLVM_LIB}")
 
         if (LLVM_VERSION VERSION_LESS 3.8.0)
