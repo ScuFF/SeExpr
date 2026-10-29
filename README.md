@@ -149,6 +149,18 @@ symbol-prefix transformation, without sed/tee pipelines or source-tree writes.
 When Bison/Flex are absent, the checked-in pre-generated sources remain the
 fallback. Updating those checked-in files is a separate maintainer operation.
 
+## Linux shared-engine LLVM isolation
+
+On Linux with GNU/Clang, LLVM archive symbols and inline implementation symbols
+are hidden inside the shared engine. A linker map also localizes the LLVM
+namespace, including non-inline template instantiations emitted by SeExpr's
+own objects in Debug builds. The existing SeExpr API remains exported.
+CMake `PRIVATE` linkage alone does not prevent ELF symbol preemption when a graphics driver loads a different LLVM.
+Shared consumers receive `LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1` to avoid
+a header-generated dependency on LLVM Support's private ABI-check variable;
+the engine's own SDK ABI checks remain enabled. This does not replace LLVM
+headers/package discovery or claim support for arbitrary LLVM versions.
+
 ## SeExpr Developers
 
  * David Aguilar

@@ -90,6 +90,23 @@ if (ENABLE_LLVM_BACKEND)
     endforeach()
     # LLVM stays private to the shared engine; applications link only its API.
     target_link_libraries(${seexpr_shared_engine} PRIVATE ${LLVM_LIB})
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        # PRIVATE controls CMake usage requirements, not ELF symbol exports.
+        # A graphics driver/plugin may load a different LLVM into this process.
+        # Keep statically linked archive symbols local to this shared engine.
+        target_link_options(${seexpr_shared_engine} PRIVATE "LINKER:--exclude-libs,ALL")
+        set_target_properties(${seexpr_shared_engine} PROPERTIES VISIBILITY_INLINES_HIDDEN YES)
+        # Debug builds also emit non-inline LLVM template instantiations in
+        # SeExpr objects. Archive exclusion/inline visibility cannot hide those.
+        # Localize the LLVM namespace while retaining the existing SeExpr API.
+        set(llvm_export_map "${PROJECT_SOURCE_DIR}/src/build/llvm-private.map")
+        target_link_options(${seexpr_shared_engine} PRIVATE "LINKER:--version-script=${llvm_export_map}")
+        set_property(TARGET ${seexpr_shared_engine} APPEND PROPERTY LINK_DEPENDS "${llvm_export_map}")
+        # Public headers expose LLVM types, but shared consumers do not
+        # link LLVM Support. Suppress its header-only link probe for consumers;
+        # the engine itself retains LLVM's ABI checks against its private SDK.
+        target_compile_definitions(${seexpr_shared_engine} INTERFACE LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1)
+    endif()
     if (NOT WIN32)
         target_link_libraries(${seexpr_static_engine} ${LLVM_LIB} "dl" "pthread")
     else ()

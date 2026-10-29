@@ -1,0 +1,4 @@
+{
+    local:
+        extern "C++" { llvm::*; };
+};
