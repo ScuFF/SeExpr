@@ -131,6 +131,11 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ExprConfig.h"
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 if (ENABLE_LLVM_BACKEND)
+    # Public expression headers include LLVM headers. Propagate them to
+    # build-tree consumers; the installed package discovers its own LLVM.
+    foreach(engine ${seexpr_static_engine} ${seexpr_shared_engine})
+        target_include_directories(${engine} INTERFACE "$<BUILD_INTERFACE:${LLVM_INCLUDE_DIR}>")
+    endforeach()
     # LLVM stays private to the shared engine; applications link only its API.
     target_link_libraries(${seexpr_shared_engine} PRIVATE ${LLVM_LIB})
     if (NOT WIN32)

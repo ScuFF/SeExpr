@@ -122,6 +122,16 @@ The AST Python package retains its separate Python-package staging directory.
 These are standalone SeExpr options: callers provide their own dependencies and
 installation prefix. They do not download SDKs or require a parent project.
 
+## Installed LLVM-enabled CMake package
+
+An LLVM-enabled installation exposes LLVM headers through its public expression
+headers. Its CMake package discovers LLVM with `find_dependency(LLVM CONFIG)` and
+provides those include directories to both engine targets. Set `LLVM_DIR` or
+`CMAKE_PREFIX_PATH` to a compatible LLVM SDK when configuring a consumer. Static
+consumers also use the imported LLVM component libraries; shared consumers use
+the shared SeExpr engine. No dependency download or workspace path is selected
+by SeExpr. Interpreter-only packages do not require LLVM.
+
 ## SeExpr Developers
 
  * David Aguilar
