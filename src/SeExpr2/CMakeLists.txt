@@ -27,57 +27,9 @@ set_source_files_properties("ExprBuiltins.cpp" PROPERTIES COMPILE_DEFINITIONS "_
 # Allow flex/bison to find the current directory
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-## find our parser generators
-find_program(BISON_EXE bison)
-find_program(FLEX_EXE flex)
-find_program(SED_EXE sed)
-
-# TODO use recent cmake to use FindFlex FindBison
-if ((BISON_EXE STREQUAL "BISON_EXE-NOTFOUND") OR
-    (FLEX_EXE STREQUAL "FLEX_EXE-NOTFOUND") OR
-    (SED_EXE STREQUAL "SED_EXE-NOTFOUND"))
-  # don't have flex/bison/sed, use pregenerated versions
-    set(parser_cpp ${PREGENERATED_ROOT}/SeExpr/generated/ExprParser.cpp ${PREGENERATED_ROOT}/SeExpr/generated/ExprParserLex.cpp)
-else()
-    ## build the parser from the flex/yacc sources
-    add_custom_command(
-        SOURCE "ExprParserLex.l"
-        COMMAND "flex"
-        ARGS "-oExprParserLexIn.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/ExprParserLex.l"
-        OUTPUT ExprParserLexIn.cpp
-        DEPENDS ExprParserLex.l)
-    
-    add_custom_command(
-        SOURCE "ExprParserLexIn.cpp"
-        COMMAND "sed"
-        ARGS -e "'s/SeExprwrap(n)/SeExprwrap()/g'" -e "'s/yy/SeExpr2/g'" -e "'s/YY/SeExprYY/g'"  ExprParserLexIn.cpp | tee ExprParserLex.cpp ${CMAKE_CURRENT_SOURCE_DIR}/generated/ExprParserLex.cpp > /dev/null
-        OUTPUT ExprParserLex.cpp
-        DEPENDS ExprParserLexIn.cpp)
-    
-    add_custom_command(
-        SOURCE "ExprParser.y"
-        COMMAND "bison"
-        ARGS "--defines" "--verbose" "--fixed-output-files" "-p" "SeExpr2" "${CMAKE_CURRENT_SOURCE_DIR}/ExprParser.y"
-        OUTPUT y.tab.c y.tab.h
-        DEPENDS ExprParser.y)
-    
-    add_custom_command(
-        SOURCE "y.tab.h"
-        COMMAND "sed"
-        ARGS -e "'s/yy/SeExpr2/g'" -e "'s/YY/SeExprYY/g'" y.tab.h | tee  ExprParser.tab.h ${CMAKE_CURRENT_SOURCE_DIR}/generated/ExprParser.tab.h > /dev/null
-        OUTPUT ExprParser.tab.h
-        DEPENDS y.tab.h)
-    
-    add_custom_command(
-        SOURCE "y.tab.c"
-        COMMAND "sed"
-        ARGS -e "'s/yy/SeExpr2/g'" -e "'s/YY/SeExprYY/g'" y.tab.c | tee ExprParser.cpp  "${CMAKE_CURRENT_SOURCE_DIR}/generated/ExprParser.cpp" > /dev/null
-        OUTPUT ExprParser.cpp
-        DEPENDS y.tab.c ExprParser.tab.h)
-
-    ## set build files
-    set(parser_cpp ExprParser.cpp ExprParserLex.cpp)
-endif()
+# Generate into the build tree when tools are available; otherwise use the
+# checked-in parser payload. Core and UI share the same generation rules.
+BuildParserScanner(ExprParserLex ExprParser SeExpr2 parser_cpp SeExpr)
 
 
 ## Make the SeExpr library with and without LLVM support

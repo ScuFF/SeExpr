@@ -141,6 +141,14 @@ capability and discover its Qt dependencies. With no components, editors are
 exposed when their Qt dependencies are available; engine-only use remains
 available otherwise. Unknown required components fail package discovery.
 
+## Parser generation
+
+Parser generation uses discovered Bison/Flex executables and writes only into
+the build directory. Core and UI parsers share the same rules and a CMake
+symbol-prefix transformation, without sed/tee pipelines or source-tree writes.
+When Bison/Flex are absent, the checked-in pre-generated sources remain the
+fallback. Updating those checked-in files is a separate maintainer operation.
+
 ## SeExpr Developers
 
  * David Aguilar
