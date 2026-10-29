@@ -38,6 +38,12 @@ class QtPythonBindings(unittest.TestCase):
             editor.setExpr(123)
         with self.assertRaises(UnicodeEncodeError):
             editor.setExpr("\ud800")
+        # This class has protected virtual slots. Its wrappers must compile
+        # without SIP's protected-is-public compiler macro on every platform.
+        short_editor = expreditor2.ExprShortEdit(parent)
+        short_editor.setExpressionString(expression)
+        self.assertEqual(short_editor.getExpressionString(), expression)
+        self.assertIsInstance(short_editor.expandButton, QtWidgets.QToolButton)
         sip.delete(parent)
 
     def test_dialog_and_curve_constructors(self):

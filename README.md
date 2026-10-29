@@ -61,6 +61,11 @@ native Qt5 SDK. The SDK must be compatible with the Qt version used by PyQt5.
 Legacy SIP 4, `sipconfig`, PyQt4, and `distutils` are not used by this target.
 The separate core Python module still requires Boost.Python.
 
+Qt Python wrappers are generated with SIP's `protected-is-public` mode disabled
+on every platform. CMake owns wrapper compilation, so generation must not depend
+on compiler macros that SIP would otherwise add only to its own build. This
+keeps protected virtual-slot access portable without changing C++ class access.
+
 ```bash
 cmake --build build --target expreditor2
 ctest --test-dir build -R '^qtPythonBindings$' --output-on-failure
@@ -69,9 +74,11 @@ ctest --test-dir build -R '^qtPythonBindings$' --output-on-failure
 The smoke test is registered when `BUILD_TESTS=ON`; it creates widgets using
 Qt's offscreen platform and checks expression text, Unicode conversion, and
 signal connections. On Windows the module is built with the `.pyd` suffix.
-For the normal PyQt5 wheels, use a Release native build: Debug configurations
-require matching Qt/Python runtime and development libraries and have not
-been validated. Linux builds of the modernized binding are also unverified.
+The native Qt SDK and PyQt5 runtime must be ABI compatible. Linux GCC Release
+and Debug bindings have been validated with Qt 5.15.2 and PyQt5 5.15.11. On
+Windows, the validated wheel-based setup uses Release; MSVC Debug needs a
+compatible Python/PyQt/Qt runtime arrangement. Set `USE_QT_PYTHON=OFF` to omit
+only this binding while retaining native editors and the AST Python binding.
 
 Examining the demo applications in src/demo is a great way to see
 some usage examples of the library. The basic strategy is to subclass

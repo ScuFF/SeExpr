@@ -55,6 +55,9 @@ def main():
         f'abi-version = {quote(abi)}\nsip-module = "PyQt5.sip"\n'
         '\n[tool.sip.bindings.expreditor2]\n'
         f'sip-file = {quote(source.name)}\nconcatenate = 1\n'
+        # CMake owns compilation, so do not rely on SIP's platform-default
+        # protected-is-public compiler macros. Generate portable access wrappers.
+        'protected-is-public = false\n'
         f'tags = {json.dumps(metadata["module-tags"])}\n'
         f'disabled-features = {json.dumps(metadata["module-disabled-features"])}\n',
         encoding="utf-8")
