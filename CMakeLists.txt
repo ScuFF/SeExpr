@@ -332,6 +332,19 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc"
 write_basic_package_version_file("${PROJECT_NAME}-config-version.cmake"
     VERSION ${seexpr2_VERSION} COMPATIBILITY AnyNewerVersion)
 
+# Keep optional editor dependencies out of engine-only package consumption.
+set(SEEXPR_PACKAGE_EDITOR_QT "")
+if(TARGET SeExpr2Editor)
+    if(ENABLE_QT5)
+        set(SEEXPR_PACKAGE_EDITOR_QT Qt5)
+    else()
+        set(SEEXPR_PACKAGE_EDITOR_QT Qt4)
+    endif()
+    install(EXPORT ${PROJECT_NAME}Editor NAMESPACE ${PROJECT_NAME}::
+        FILE "${PROJECT_NAME}-editor-exports.cmake"
+        DESTINATION "${CMAKE_DIR}" COMPONENT devel)
+endif()
+
 configure_package_config_file(
     "src/build/${PROJECT_NAME}-config.cmake" "${PROJECT_NAME}-config.cmake"
     INSTALL_DESTINATION ${CMAKE_DIR}

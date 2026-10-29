@@ -132,6 +132,15 @@ consumers also use the imported LLVM component libraries; shared consumers use
 the shared SeExpr engine. No dependency download or workspace path is selected
 by SeExpr. Interpreter-only packages do not require LLVM.
 
+## Engine and editor CMake package components
+
+The installed package separates engine and editor exports. Use
+`find_package(seexpr2 CONFIG REQUIRED COMPONENTS Engine)` to consume engines
+without probing for Qt, or `COMPONENTS Editor` to require the installed editor
+capability and discover its Qt dependencies. With no components, editors are
+exposed when their Qt dependencies are available; engine-only use remains
+available otherwise. Unknown required components fail package discovery.
+
 ## SeExpr Developers
 
  * David Aguilar

@@ -127,7 +127,7 @@ if (Qt5_FOUND OR QT4_FOUND)
 
     ## Install library and includes
     install(TARGETS SeExpr2Editor
-            EXPORT ${PROJECT_NAME}
+            EXPORT ${PROJECT_NAME}Editor
             DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
     # The editor object code must match its engine's data import definitions.
@@ -150,7 +150,7 @@ if (Qt5_FOUND OR QT4_FOUND)
     get_target_property(editor_libraries SeExpr2Editor LINK_LIBRARIES)
     list(TRANSFORM editor_libraries REPLACE "^SeExpr2$" "${alternate_engine}")
     target_link_libraries(${alternate_editor} ${editor_libraries})
-    install(TARGETS ${alternate_editor} EXPORT ${PROJECT_NAME}
+    install(TARGETS ${alternate_editor} EXPORT ${PROJECT_NAME}Editor
             DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
     seexpr_set_runtime_output(SeExpr2Editor)
